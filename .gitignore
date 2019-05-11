@@ -1,0 +1,11 @@
+# VS Code
+.vscode/
+
+# Build
+iso_stage/
+*.o
+*.iso
+*.elf
+
+#Bochs log
+bochslog.txt
