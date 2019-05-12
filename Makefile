@@ -1,11 +1,12 @@
 OBJECTS = loader.o kmain.o
-CC = gcc
-CFLAGS = -m32 -nostdlib -nostdinc -fno-builtin -fno-stack-protector \
-			-nostartfiles -nodefaultlibs -Wall -Wextra -Werror -c
-LDFLAGS = -T link.ld -melf_i386
+CC = i686-elf-gcc
+CFLAGS = -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-AS = nasm
-ASFLAGS = -f elf
+LD = i686-elf-gcc
+LDFLAGS = -T link.ld -ffreestanding -O2 -nostdlib -lgcc
+
+AS = i686-elf-as
+ASFLAGS =
 
 ISO = genisoimage
 ISOFLAGS = -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 \
@@ -16,7 +17,7 @@ BOCHS = bochs
 all: kernel.elf
 
 kernel.elf: $(OBJECTS)
-	ld $(LDFLAGS) $(OBJECTS) -o $@
+	$(LD) $(LDFLAGS) $(OBJECTS) -o $@
 
 os.iso: kernel.elf
 	cp -R iso iso_stage
@@ -38,7 +39,7 @@ run: bochsrc.txt
 	$(BOCHS) -f $< -q
 
 %.o: %.c
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
