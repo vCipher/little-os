@@ -7,5 +7,6 @@ iso_stage/
 *.iso
 *.elf
 
-#Bochs log
+#Bochs
 bochslog.txt
+bochsrc.txt
