@@ -1,7 +1,10 @@
+#include "gdt.h"
 #include "frame-buffer.h"
 
 void kmain(void)
 {
+	gdt_init();
+
 	frame_buffer buffer;
 	frame_buffer_create(&buffer);
 
