@@ -1,37 +1,42 @@
-OBJECTS = loader.o kmain.o frame-buffer.o string.o
-CC = i686-elf-gcc
-CFLAGS = -std=gnu99 -ffreestanding -O0 -Wall -Wextra -g
+CURRENT_DIR=$(shell pwd)
+INTERMEDIATE_DIR=${CURRENT_DIR}/stage
+OUTPUT_DIR=${CURRENT_DIR}/bin
+SOURCE_DIR=${CURRENT_DIR}/src
 
-LD = i686-elf-gcc
-LDFLAGS = -T link.ld -ffreestanding -nostdlib -lgcc
+ISO=genisoimage
+ISOFLAGS= \
+	-R -b boot/grub/stage2_eltorito \
+	-no-emul-boot -boot-load-size 4 \
+	-A os -input-charset utf8 -boot-info-table 
 
-AS = i686-elf-as
-ASFLAGS =
+QEMU=qemu-system-i386
 
-ISO = genisoimage
-ISOFLAGS = -R -b boot/grub/stage2_eltorito -no-emul-boot -boot-load-size 4 \
-	-A os -input-charset utf8 -quiet -boot-info-table 
+build_image: ${OUTPUT_DIR} ${INTERMEDIATE_DIR}
+	make -C ${SOURCE_DIR} ${OUTPUT_DIR}/kernel.elf \
+	INTERMEDIATE_DIR=${INTERMEDIATE_DIR} \
+	OUTPUT_DIR=${OUTPUT_DIR}
 
-QEMU = qemu-system-i386
+build_iso: build_image
+	cp -R iso ${INTERMEDIATE_DIR}/iso
+	cp ${OUTPUT_DIR}/kernel.elf ${INTERMEDIATE_DIR}/iso/boot/kernel.elf
+	${ISO} ${ISOFLAGS} -o ${OUTPUT_DIR}/os.iso ${INTERMEDIATE_DIR}/iso
 
-all: kernel.elf
+${OUTPUT_DIR}:
+	mkdir $@
 
-kernel.elf: $(OBJECTS)
-	$(LD) $(LDFLAGS) $(OBJECTS) -o $@
+${INTERMEDIATE_DIR}:
+	mkdir $@
 
-os.iso: kernel.elf
-	cp -R iso iso_stage
-	cp $< iso_stage/boot/$<
-	$(ISO) $(ISOFLAGS) -o $@ iso_stage
+all: build_image build_iso
 
-run: os.iso
-	$(QEMU) -cdrom $<
+run: build_image
+	${QEMU} -kernel ${OUTPUT_DIR}/kernel.elf
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-%.o: %.s
-	$(AS) $(ASFLAGS) $< -o $@
+debug: build_image
+	${QEMU} -s -S -kernel ${OUTPUT_DIR}/kernel.elf
 
 clean:
-	rm -rf *.o kernel.elf os.iso bochsrc.txt iso_stage
+	rm -rf ${INTERMEDIATE_DIR}
+	rm -rf ${OUTPUT_DIR}
+
+.PHONY: all clean run build_image build_iso

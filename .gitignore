@@ -2,11 +2,17 @@
 .vscode/
 
 # Build
-iso_stage/
+stage/
+bin/
 *.o
 *.iso
 *.elf
 
-#Bochs
+# Bochs
 bochslog.txt
 bochsrc.txt
+
+# GNU Global
+GPATH
+GRTAGS
+GTAGS
